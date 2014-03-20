@@ -82,7 +82,61 @@ end
 #
 #################################################
 
-# Test whether a graph is cyclic
+# Give all simple paths from node A to node B
+
+type AllPathResult{V}
+    result::Dict{Int,Array{V}}
+    num_paths::Int
+end
+
+function all_simple_paths{V,E}(
+    graph::AbstractGraph{V,E},
+    source::V,
+    target::V,
+    cutoff::Int)  
+
+    stack=Stack(V)
+    push!(stack,source)
+
+    n = num_vertices(graph)
+    discovered = zeros(Int, n)
+
+    result=OrderedDict(Int,Array{V})
+    resultcount=0
+
+    currentresult=V[]
+    currentlen=0
+
+    while !isempty(stack)
+        v=pop!(stack)    
+
+        currentlen=currentlen+1
+        if currentlen>cutoff
+            currentlen=currentlen-1
+            continue
+        else
+            push!(currentresult,v)
+        end
+
+        if v==target
+            resultcount=resultcount+1
+            result[resultcount]=currentresult
+        end
+
+        if discovered[vertex_index(v,graph)]==0
+            discovered[vertex_index(v,graph)]=1
+            for e in out_edges(v, graph)        #eval neighours
+                w::V = target(e, graph)
+                #w_index::Int = vertex_index(v, graph)
+                push!(stack,w)
+            end
+            #discovered[vertex_index(v,graph)]=0
+        end
+    end
+end
+
+
+#Test whether a graph is cyclic
 
 type DFSCyclicTestVisitor <: AbstractGraphVisitor
     found_cycle::Bool
